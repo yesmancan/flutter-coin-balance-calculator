@@ -32,6 +32,7 @@ dev_dependencies:
   cached_network_image: ^2.2.0+1
   flutter_guid: ^0.1.0
   json_serializable: ^3.3.0
+  flutter_masked_text: ^0.8.0
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 

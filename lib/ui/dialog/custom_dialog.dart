@@ -1,6 +1,8 @@
 import 'package:coin_balance_calculator/http/item_service.dart';
+
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_masked_text/flutter_masked_text.dart';
 import 'package:flutter/services.dart';
 
 class Consts {
@@ -13,6 +15,7 @@ class Consts {
 class CustomDialog extends StatelessWidget {
   final String market, coin;
   final String title, buttonText;
+  final double lastPrice;
   final String image;
 
   CustomDialog({
@@ -20,6 +23,7 @@ class CustomDialog extends StatelessWidget {
     @required this.buttonText,
     @required this.coin,
     @required this.market,
+    @required this.lastPrice,
     this.image,
   });
 
@@ -37,7 +41,7 @@ class CustomDialog extends StatelessWidget {
 
   dialogContent(BuildContext context) {
     final unitController = TextEditingController();
-    final buyingpriceController = TextEditingController();
+    final buyingpriceController = TextEditingController(text: lastPrice.toString());
 
     ItemService _itemService = ItemService();
     String buyingprice;
@@ -88,6 +92,7 @@ class CustomDialog extends StatelessWidget {
               ),
               TextFormField(
                 controller: unitController,
+                keyboardType: TextInputType.number,
                 style: TextStyle(
                   color: Colors.black,
                 ),
@@ -97,10 +102,6 @@ class CustomDialog extends StatelessWidget {
                     color: Colors.grey,
                   ),
                 ),
-                keyboardType: TextInputType.number,
-                inputFormatters: <TextInputFormatter>[
-                  WhitelistingTextInputFormatter.digitsOnly
-                ], // Only nu
                 validator: (value) {
                   if (value.isEmpty) {
                     return 'Lütfen boş geçmeyiniz';
@@ -129,9 +130,6 @@ class CustomDialog extends StatelessWidget {
                   ),
                 ),
                 keyboardType: TextInputType.number,
-                inputFormatters: <TextInputFormatter>[
-                  WhitelistingTextInputFormatter.digitsOnly
-                ], // O/ Only nu
                 validator: (value) {
                   if (value.isEmpty) {
                     return 'Lütfen boş geçmeyiniz';
@@ -144,13 +142,16 @@ class CustomDialog extends StatelessWidget {
                 alignment: Alignment.bottomRight,
                 child: FlatButton(
                   color: Colors.blueAccent,
-                  onPressed: () {
+                  onPressed: () async {
                     unit = double.parse(unitController.text);
                     buyingprice = buyingpriceController.text;
 
-                    _itemService.addTransaction(
+                    await _itemService.addTransaction(
                         market, coin, buyingprice, unit);
-                    Navigator.of(context).pop(); // To close the dialog
+
+                    Navigator.popUntil(context, (route) {
+                      return route.settings.name == "/";
+                    });
                   },
                   child: Text(buttonText),
                 ),

@@ -14,6 +14,7 @@ class _TransactionAddPageState extends State<TransactionAddPage> {
   ItemService _itemService;
   TextEditingController _searchQueryController = TextEditingController();
   bool _isSearching = false;
+  bool _labelSearching = false;
   String searchQuery = "";
 
   @override
@@ -24,24 +25,54 @@ class _TransactionAddPageState extends State<TransactionAddPage> {
 
   @override
   Widget build(BuildContext context) {
-    setState(() {});
-
     return Scaffold(
       appBar: AppBar(
-        title: _isSearching ? _buildSearchField() : Text("YENİ İŞLEM EKLE"),
+        title: _isSearching && !_labelSearching
+            ? _buildSearchField()
+            : Text("YENİ İŞLEM EKLE"),
         actions: _buildActions(),
       ),
       body: Column(
         children: <Widget>[
-          Padding(
-            padding: const EdgeInsets.only(top: 10.0),
-            child: Text(
-              "BÜTÜN PARALAR",
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 18,
+          Row(
+            children: <Widget>[
+              ButtonBar(
+                children: <Widget>[
+                  FlatButton(
+                    child: Text('TÜMÜ'),
+                    color: Colors.blue,
+                    onPressed: () {
+                      setState(() {
+                        _isSearching = false;
+                        _labelSearching = false;
+                        _clearSearchQuery();
+                      });
+                    },
+                  ),
+                  FlatButton(
+                    child: Text('TRY'),
+                    color: Colors.blue,
+                    onPressed: () {
+                      _openLabelSearch("TRY");
+                    },
+                  ),
+                  FlatButton(
+                    child: Text('USDT'),
+                    color: Colors.blue,
+                    onPressed: () {
+                      _openLabelSearch("USDT");
+                    },
+                  ),
+                  FlatButton(
+                    child: Text('BTC'),
+                    color: Colors.blue,
+                    onPressed: () {
+                      _openLabelSearch("BTC");
+                    },
+                  ),
+                ],
               ),
-            ),
+            ],
           ),
           Divider(),
           Expanded(
@@ -58,9 +89,11 @@ class _TransactionAddPageState extends State<TransactionAddPage> {
                   if (_isSearching && searchQuery.isNotEmpty) {
                     data = data
                         .where((element) =>
-                            element.pair.denominator.contains(searchQuery) ||
-                            element.pair.numerator.contains(searchQuery) ||
-                            element.company.name.contains(searchQuery))
+                                element.pair.denominator
+                                    .contains(searchQuery) ||
+                                element.pair.numerator.contains(searchQuery)
+                            // || element.company.name.contains(searchQuery)
+                            )
                         .toList();
                   }
 
@@ -77,7 +110,7 @@ class _TransactionAddPageState extends State<TransactionAddPage> {
                         title: Text(item.pair.numerator),
                         subtitle: RichText(
                           text: TextSpan(
-                            text: '${item.pair.denominator}',
+                            text: '${item.last} ${item.pair.denominator}',
                             style: TextStyle(fontSize: 11),
                           ),
                         ),
@@ -102,18 +135,7 @@ class _TransactionAddPageState extends State<TransactionAddPage> {
                                     MainAxisAlignment.spaceBetween,
                                 mainAxisSize: MainAxisSize.min,
                                 children: <Widget>[
-                                  Column(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceAround,
-                                    children: <Widget>[
-                                      Text(
-                                          '${item.last} ${item.pair.denominator}'),
-                                      Text(
-                                        '${item.company.name}',
-                                        style: TextStyle(fontSize: 12),
-                                      ),
-                                    ],
-                                  ),
+                                  Text('${item.company.name}'),
                                   IconButton(
                                       icon: Icon(Icons.add),
                                       color: Colors.white,
@@ -122,7 +144,8 @@ class _TransactionAddPageState extends State<TransactionAddPage> {
                                             'https://raw.githubusercontent.com/yesmancan/all-crypto-coin-img-db/master/img/coins/64x64/${item.pair.numerator}.png',
                                             item.pair.numerator,
                                             item.companyId,
-                                            item.pairId);
+                                            item.pairId,
+                                            item.last);
                                       }),
                                 ],
                               ),
@@ -145,8 +168,8 @@ class _TransactionAddPageState extends State<TransactionAddPage> {
     );
   }
 
-  Future<Null> _addTransacion(
-      String img, String name, String market, String coin) async {
+  Future<Null> _addTransacion(String img, String name, String market,
+      String coin, double lastPrice) async {
     await showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -156,6 +179,7 @@ class _TransactionAddPageState extends State<TransactionAddPage> {
           coin: coin,
           buttonText: "Okay",
           image: img,
+          lastPrice: lastPrice,
         );
       },
     );
@@ -177,7 +201,7 @@ class _TransactionAddPageState extends State<TransactionAddPage> {
   }
 
   List<Widget> _buildActions() {
-    if (_isSearching) {
+    if (_isSearching && !_labelSearching) {
       return <Widget>[
         IconButton(
           icon: const Icon(Icons.clear),
@@ -207,7 +231,9 @@ class _TransactionAddPageState extends State<TransactionAddPage> {
 
     setState(() {
       _isSearching = true;
-      _buildSearchField();
+      if (!_labelSearching) {
+        _buildSearchField();
+      }
     });
   }
 
@@ -229,6 +255,16 @@ class _TransactionAddPageState extends State<TransactionAddPage> {
     setState(() {
       _searchQueryController.clear();
       updateSearchQuery("");
+    });
+  }
+
+  void _openLabelSearch(String label) {
+    setState(() {
+      _isSearching = true;
+      _labelSearching = true;
+      updateSearchQuery(label);
+      _isSearching = false;
+      _labelSearching = false;
     });
   }
 }

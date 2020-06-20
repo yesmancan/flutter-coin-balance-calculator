@@ -18,8 +18,9 @@ class ItemService {
 
     if (response.statusCode == 200) {
       Iterable items = json.decode(response.body)["data"];
-
-      return items.map((item) => Transaction.fromJson(item)).toList();
+      var liste = items.map((item) => Transaction.fromJson(item)).toList();
+      liste.sort((a, b) => b.createDt.compareTo(a.createDt));
+      return liste;
     } else {
       throw Exception("Something went wrong");
     }
