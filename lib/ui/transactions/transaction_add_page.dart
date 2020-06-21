@@ -1,7 +1,7 @@
 import 'package:coin_balance_calculator/http/item_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:coin_balance_calculator/model/currency.dart';
-import 'package:coin_balance_calculator/ui/dialog/custom_dialog.dart';
+import 'package:coin_balance_calculator/ui/dialog/transaction_add_dialog.dart';
 
 import 'package:flutter/material.dart';
 
@@ -95,6 +95,10 @@ class _TransactionAddPageState extends State<TransactionAddPage> {
                             // || element.company.name.contains(searchQuery)
                             )
                         .toList();
+                    if (_isSearching && _labelSearching) {
+                      _isSearching = false;
+                      _labelSearching = false;
+                    }
                   }
 
                   return ListView.separated(
@@ -173,7 +177,7 @@ class _TransactionAddPageState extends State<TransactionAddPage> {
     await showDialog(
       context: context,
       builder: (BuildContext context) {
-        return CustomDialog(
+        return TransactionAddDialog(
           title: name,
           market: market,
           coin: coin,
@@ -263,8 +267,6 @@ class _TransactionAddPageState extends State<TransactionAddPage> {
       _isSearching = true;
       _labelSearching = true;
       updateSearchQuery(label);
-      _isSearching = false;
-      _labelSearching = false;
     });
   }
 }

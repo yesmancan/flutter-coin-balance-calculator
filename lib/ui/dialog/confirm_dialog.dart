@@ -1,16 +1,15 @@
-import 'package:coin_balance_calculator/model/item.dart';
 import 'package:flutter/material.dart';
 
 class ConfirmDialog extends StatelessWidget {
-  final Item item;
+  final String name;
 
-  const ConfirmDialog({Key key, this.item}) : super(key: key);
+  const ConfirmDialog({ this.name});
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text(item.name),
-      content: Text("Confirm to delete ${item.name}"),
+      title: Text(name),
+      content: Text("Confirm to delete $name"),
       actions: <Widget>[
         FlatButton(
           onPressed: () {

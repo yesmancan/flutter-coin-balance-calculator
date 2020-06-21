@@ -2,7 +2,6 @@ import 'package:coin_balance_calculator/http/item_service.dart';
 
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter_masked_text/flutter_masked_text.dart';
 import 'package:flutter/services.dart';
 
 class Consts {
@@ -12,13 +11,13 @@ class Consts {
   static const double avatarRadius = 36.0;
 }
 
-class CustomDialog extends StatelessWidget {
+class TransactionAddDialog extends StatelessWidget {
   final String market, coin;
   final String title, buttonText;
   final double lastPrice;
   final String image;
 
-  CustomDialog({
+  TransactionAddDialog({
     @required this.title,
     @required this.buttonText,
     @required this.coin,

@@ -1,5 +1,6 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import 'package:coin_balance_calculator/http/item_service.dart';
 import 'package:coin_balance_calculator/model/transaction.dart';
@@ -11,134 +12,166 @@ class TransactionListPage extends StatefulWidget {
 }
 
 class _TransactionListPageState extends State<TransactionListPage> {
-  ItemService _itemService;
+  Future<List<Transaction>> transactions;
+  ItemService _itemService = ItemService();
 
   @override
   void initState() {
-    _itemService = ItemService();
     super.initState();
+    setState(() {
+      transactions = _itemService.fetchTransactions();
+    });
+  }
+
+  @override
+  void setState(fn) {
+    if (mounted) {
+      super.setState(fn);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        children: <Widget>[
-          AppBar(
-            title: Text("İşlemlerim"),
-            actions: <Widget>[
-              IconButton(
-                icon: Icon(
-                  Icons.add,
-                  color: Colors.white,
-                ),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => TransactionAddPage(),
-                    ),
-                  );
-                },
-              )
-            ],
-          ),
-          Expanded(
-            child: Stack(
-              children: <Widget>[
-                FutureBuilder(
-                  future: _itemService.fetchTransactions(),
-                  builder: (BuildContext context,
-                      AsyncSnapshot<List<Transaction>> snapshot) {
-                    if (snapshot.hasData && snapshot.data.length == 0) {
-                      return Center(
-                          child: Text("İşlem geçmişiniz bulunmamaktadır."));
-                    }
-
-                    if (snapshot.hasData) {
-                      
-                      return ListView.separated(
-                        padding: EdgeInsets.all(0),
-                        itemCount: snapshot.data.length,
-                        separatorBuilder: (context, index) {
-                          return Divider();
-                        },
-                        itemBuilder: (BuildContext context, int index) {
-                          Transaction item = snapshot.data[index];
-
-                          return GestureDetector(
-                            onLongPress: () async {
-                              setState(() {});
-                            },
-                            child: ListTile(
-                              title: Text(item.coin.numerator),
-                              subtitle: RichText(
-                                text: TextSpan(
-                                  text: '${item.coin.denominator}',
-                                  style: TextStyle(fontSize: 11),
-                                ),
-                              ),
-                              leading: CachedNetworkImage(
-                                placeholder: (context, url) =>
-                                    CircularProgressIndicator(),
-                                errorWidget: (context, url, error) =>
-                                    Icon(Icons.error),
-                                imageUrl:
-                                    'https://raw.githubusercontent.com/yesmancan/all-crypto-coin-img-db/master/img/coins/64x64/${item.coin.numerator}.png',
-                                imageBuilder: (context, imageProvider) =>
-                                    CircleAvatar(
-                                  backgroundColor: Colors.transparent,
-                                  backgroundImage: imageProvider,
-                                ),
-                              ),
-                              trailing: Expanded(
-                                child: Stack(
-                                  children: <Widget>[
-                                    Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: <Widget>[
-                                        Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceAround,
-                                          children: <Widget>[
-                                            Text(
-                                                '${item.unit} ${item.coin.numerator}'),
-                                            RichText(
-                                              text: TextSpan(
-                                                text: '${item.buyingPrice}',
-                                                children: <TextSpan>[
-                                                  TextSpan(
-                                                    text:
-                                                        ' ${item.coin.denominator}',
-                                                    style:
-                                                        TextStyle(fontSize: 12),
-                                                  )
-                                                ],
-                                              ),
-                                            ),
-                                          ],
-                                        )
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      );
-                    }
-                    if (snapshot.hasError) {
-                      return Text(snapshot.error.toString());
-                    }
-                    return Center(child: CircularProgressIndicator());
-                  },
-                ),
-              ],
+      appBar: AppBar(
+        title: Text("İşlemlerim"),
+        actions: <Widget>[
+          IconButton(
+            icon: Icon(
+              Icons.add,
+              color: Colors.white,
             ),
-          ),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => TransactionAddPage(),
+                ),
+              );
+            },
+          )
         ],
       ),
+      body: FutureBuilder(
+        future: transactions,
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            List<Transaction> data = snapshot.data;
+            return _buildListView(data);
+          } else if (snapshot.hasError) {
+            return Center(child: Text("${snapshot.error}"));
+          }
+
+          return Center(child: CircularProgressIndicator());
+        },
+      ),
+    );
+  }
+
+  ListView _buildListView(List<Transaction> data) {
+    return ListView.separated(
+      shrinkWrap: true,
+      cacheExtent: 50000,
+      padding: EdgeInsets.all(0),
+      itemCount: data.length,
+      separatorBuilder: (context, index) {
+        return Divider();
+      },
+      itemBuilder: (BuildContext context, int index) {
+        if (data.length == 0) {
+          return Center(child: Text("İşlem geçmişiniz bulunmamaktadır."));
+        }
+        if (data != null && data.length > 0) {
+          Transaction item = data[index];
+
+          return Slidable(
+            key: Key(item.id),
+            actionPane: SlidableDrawerActionPane(),
+            actionExtentRatio: 0.25,
+            actions: <Widget>[
+              IconSlideAction(
+                caption: 'Archive',
+                color: Colors.blue,
+                icon: Icons.archive,
+                onTap: () => Scaffold.of(context)
+                    .showSnackBar(SnackBar(content: Text("$item dismissed"))),
+              ),
+              IconSlideAction(
+                caption: 'Share',
+                color: Colors.indigo,
+                icon: Icons.share,
+                onTap: () => Scaffold.of(context)
+                    .showSnackBar(SnackBar(content: Text("$item dismissed"))),
+              ),
+            ],
+            secondaryActions: <Widget>[
+              IconSlideAction(
+                caption: 'Edit',
+                color: Colors.black45,
+                icon: Icons.more_horiz,
+                onTap: () => Scaffold.of(context)
+                    .showSnackBar(SnackBar(content: Text("$item dismissed"))),
+              ),
+              IconSlideAction(
+                caption: 'Delete',
+                color: Colors.red,
+                icon: Icons.delete,
+                onTap: () => Scaffold.of(context)
+                    .showSnackBar(SnackBar(content: Text("$item dismissed"))),
+              ),
+            ],
+            child: ListTile(
+              title: Text(item.coin.numerator),
+              subtitle: RichText(
+                text: TextSpan(
+                  text: '${item.coin.denominator}',
+                  style: TextStyle(fontSize: 11),
+                ),
+              ),
+              leading: CachedNetworkImage(
+                placeholder: (context, url) => CircularProgressIndicator(),
+                errorWidget: (context, url, error) => Icon(Icons.error),
+                imageUrl:
+                    'https://raw.githubusercontent.com/yesmancan/all-crypto-coin-img-db/master/img/coins/64x64/${item.coin.numerator}.png',
+                imageBuilder: (context, imageProvider) => CircleAvatar(
+                  backgroundColor: Colors.transparent,
+                  backgroundImage: imageProvider,
+                ),
+              ),
+              trailing: Expanded(
+                child: Stack(
+                  children: <Widget>[
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: <Widget>[
+                            Text('${item.unit} ${item.coin.numerator}'),
+                            RichText(
+                              text: TextSpan(
+                                text: '${item.buyingPrice}',
+                                children: <TextSpan>[
+                                  TextSpan(
+                                    text: ' ${item.coin.denominator}',
+                                    style: TextStyle(fontSize: 12),
+                                  )
+                                ],
+                              ),
+                            ),
+                          ],
+                        )
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }
+
+        return Center(child: CircularProgressIndicator());
+      },
     );
   }
 }
