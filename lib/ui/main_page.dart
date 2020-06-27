@@ -1,8 +1,6 @@
+import 'package:coin_balance_calculator/ui/coin_balance_page.dart';
 import 'package:coin_balance_calculator/ui/transactions/transaction_list_page.dart';
 import 'package:flutter/material.dart';
-
-import 'shoping_list_history_page.dart';
-import 'shopping_list_main_page.dart';
 
 class MainPage extends StatefulWidget {
   MainPage({Key key}) : super(key: key);
@@ -29,9 +27,16 @@ class _MainPageState extends State<MainPage> {
   }
 
   @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       bottomNavigationBar: BottomNavigationBar(
+
         items: [
           BottomNavigationBarItem(
               icon: Icon(
@@ -46,13 +51,14 @@ class _MainPageState extends State<MainPage> {
         ],
         currentIndex: _selectedIndex,
         onTap: _onTap,
+
       ),
       body: PageView(
         controller: _pageController,
         children: <Widget>[
           TransactionListPage(),
-          ShoppingListMainPage(),
-          ShoppingListHistoryPage(),
+          CoinBalancePage(),
+          CoinBalancePage(),
         ],
       ),
     );

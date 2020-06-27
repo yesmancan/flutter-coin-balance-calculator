@@ -1,94 +1,220 @@
+import 'package:coin_balance_calculator/http/item_service.dart';
+import 'package:coin_balance_calculator/model/overview.dart';
 import 'package:flutter/material.dart';
-import 'package:charts_flutter/flutter.dart' as charts;
+import 'package:fl_chart/fl_chart.dart';
+import 'coin_row.dart';
+import 'indicator.dart';
 
-class CoinBalancePage extends StatelessWidget {
-  const CoinBalancePage({Key key}) : super(key: key);
+class CoinBalancePage extends StatefulWidget {
+  @override
+  _CoinBalancePageState createState() => _CoinBalancePageState();
+}
+
+class _CoinBalancePageState extends State<CoinBalancePage> {
+  final ItemService _itemService = ItemService();
+  int touchedIndex;
+
+  @override
+  void initState() {
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
-    List<charts.Series> seriesList = _createSampleData();
-
-    return Container(
-      child: Column(
-        children: <Widget>[
-          new charts.PieChart(
-            seriesList,
-            animate: true,
-            defaultRenderer: new charts.ArcRendererConfig(
-              arcWidth: 50,
-              strokeWidthPx: 4,
-              arcRendererDecorators: [
-                charts.ArcLabelDecorator(
-                  labelPosition: charts.ArcLabelPosition.outside,
-                  insideLabelStyleSpec: new charts.TextStyleSpec(
-                    fontSize: 16,
-                    color: charts.Color.fromHex(code: "#FFFFFF"),
+    return Scaffold(
+      appBar: AppBar(title: Text("Durum")),
+      body: FutureBuilder(
+        future: _itemService.fetchOverview(),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            return Container(
+              padding: EdgeInsets.zero,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: <Widget>[
+                  Expanded(
+                    child: AspectRatio(
+                      aspectRatio: 2,
+                      child: buildPieChart(snapshot.data),
+                    ),
                   ),
-                ),
-                charts.ArcLabelDecorator()
-              ],
-            ),
-          ),
-        ],
+                  buildIndicator(snapshot.data),
+                  Container(
+                    color: Colors.black45,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        mainAxisSize: MainAxisSize.max,
+                        children: <Widget>[
+                          Text(
+                            "numerator".toUpperCase(),
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(
+                            width: 4,
+                          ),
+                          Text(
+                            "count".toUpperCase(),
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(
+                            width: 4,
+                          ),
+                          Text(
+                            "newPrice".toUpperCase(),
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(
+                            width: 4,
+                          ),
+                          Text(
+                            "balance".toUpperCase(),
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  buildCoins(snapshot.data)
+                ],
+              ),
+            );
+          }
+
+          if (snapshot.hasError) return Text(snapshot.error.toString());
+
+          return Center(child: CircularProgressIndicator());
+        },
       ),
     );
   }
-}
 
-List<charts.Series<LinearSales, int>> _createSampleData() {
-  final data = [
-    new LinearSales(
-      0,
-      54.7,
-      charts.ColorUtil.fromDartColor(Colors.lightBlue),
-      charts.TextStyleSpec(
-        color: charts.ColorUtil.fromDartColor(Colors.white),
-      ),
-    ),
-    new LinearSales(
-      1,
-      17.8,
-      charts.ColorUtil.fromDartColor(Colors.yellowAccent),
-      charts.TextStyleSpec(
-        color: charts.ColorUtil.fromDartColor(Colors.white),
-      ),
-    ),
-    new LinearSales(
-      2,
-      13.8,
-      charts.ColorUtil.fromDartColor(Colors.blueAccent),
-      charts.TextStyleSpec(
-        color: charts.ColorUtil.fromDartColor(Colors.white),
-      ),
-    ),
-    new LinearSales(
-      3,
-      13.7,
-      charts.ColorUtil.fromDartColor(Colors.blueGrey),
-      charts.TextStyleSpec(
-        color: charts.ColorUtil.fromDartColor(Colors.white),
-      ),
-    ),
-  ];
+  PieChart buildPieChart(Overview data) {
+    return PieChart(
+      PieChartData(
+          pieTouchData: PieTouchData(touchCallback: (pieTouchResponse) {
+            setState(() {
+              if (pieTouchResponse.touchInput is FlLongPressEnd ||
+                  pieTouchResponse.touchInput is FlPanEnd) {
+                touchedIndex = -1;
+              } else {
+                touchedIndex = pieTouchResponse.touchedSectionIndex;
+              }
+            });
+          }),
+          startDegreeOffset: 180,
+          borderData: FlBorderData(
+            show: false,
+          ),
+          sectionsSpace: 2,
+          centerSpaceRadius: 0,
+          sections: showingSections(data)),
+    );
+  }
 
-  return [
-    new charts.Series<LinearSales, int>(
-      id: 'BTC',
-      domainFn: (LinearSales sales, _) => sales.id,
-      measureFn: (LinearSales sales, _) => sales.tutar,
-      colorFn: (LinearSales sales, _) => sales.color,
-      data: data,
-      outsideLabelStyleAccessorFn: (LinearSales sales, _) => sales.textStyle,
-      labelAccessorFn: (LinearSales row, _) => '${row.tutar}',
-    )
-  ];
-}
+  Expanded buildIndicator(Overview data) {
+    return Expanded(
+      child: ListView.builder(
+          shrinkWrap: true,
+          cacheExtent: 50000,
+          padding: EdgeInsets.all(0),
+          itemCount: data.coinByCoin.length,
+          scrollDirection: Axis.horizontal,
+          itemBuilder: (BuildContext context, int index) {
+            var _data = data.coinByCoin[index];
+            return Indicator(
+              color: const Color(0xff0293ee),
+              text: _data.coin.numerator,
+              isSquare: true,
+              size: touchedIndex == 0 ? 18 : 16,
+              textColor: touchedIndex == 0 ? Colors.white : Colors.grey,
+            );
+          }),
+    );
+  }
 
-class LinearSales {
-  final int id;
-  final double tutar;
-  final charts.Color color;
-  final charts.TextStyleSpec textStyle;
+  List<PieChartSectionData> showingSections(Overview overview) {
+    double other = 0;
+    List<PieChartSectionData> list = [];
+    int i = 0;
+    overview.coinByCoin.forEach((element) {
+      final isTouched = i == touchedIndex;
+      final double opacity = isTouched ? 1 : 0.6;
+      var _data = overview.coinByCoin[i];
+      var ratio = _data.newPrice / overview.newPrice * 100;
 
-  LinearSales(this.id, this.tutar, this.color, this.textStyle);
+      if (ratio < 0.8) {
+        other += ratio;
+      } else {
+        list.add(PieChartSectionData(
+          color: const Color(0xff0293ee).withOpacity(opacity),
+          value: ratio,
+          title: _data.coin.numerator,
+          radius: 100,
+          titleStyle: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: const Color(0xff044d7c)),
+        ));
+        i++;
+      }
+    });
+    i++;
+    final isTouched = i == touchedIndex;
+    final double opacity = isTouched ? 1 : 0.6;
+    list.add(PieChartSectionData(
+      color: const Color(0xff0293ee).withOpacity(opacity),
+      value: other,
+      title: "Others",
+      radius: 100,
+      titleStyle: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+          color: const Color(0xff044d7c)),
+    ));
+
+    return list;
+  }
+
+  Expanded buildCoins(Overview data) {
+    return Expanded(
+      child: ListView.builder(
+        shrinkWrap: true,
+        cacheExtent: 50000,
+        padding: EdgeInsets.all(0),
+        itemCount: data.coinByCoin.length,
+        scrollDirection: Axis.vertical,
+        itemBuilder: (BuildContext context, int index) {
+          var _data = data.coinByCoin[index];
+          return CoinRow(
+            color: const Color(0xff0293ee),
+            denominator: _data.coin.denominator,
+            numerator: _data.coin.numerator,
+            newPrice: _data.newPrice.toString(),
+            balance: _data.profit.toString(),
+            count: "100",
+            isSquare: false,
+            size: touchedIndex == 0 ? 18 : 16,
+            textColor: touchedIndex == 0 ? Colors.white : Colors.grey,
+          );
+        },
+      ),
+    );
+  }
 }

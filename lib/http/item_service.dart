@@ -131,7 +131,21 @@ class ItemService {
   //   }
   // }
 
-  Future<Overview> overview() async {
-    return new Overview();
+  Future<Overview> fetchOverview() async {
+    Map<String, String> user = {
+      "userId": "00000000-0000-0000-0000-000000000000"
+    };
+
+    Uri uri = Uri.https(_serviceUrl, "api/transaction/calculate", user);
+
+    final response = await http.get(uri);
+
+    if (response.statusCode == 200) {
+      final parsed = json.decode(response.body)["data"];
+      var data = Overview.fromJson(parsed);
+      return data;
+    } else {
+      throw Exception("Something went wrong");
+    }
   }
 }
