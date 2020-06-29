@@ -26,8 +26,9 @@ class CoinRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
+    return Container(
+      color: Colors.black,
+      padding: const EdgeInsets.all(15.0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -46,7 +47,7 @@ class CoinRow extends StatelessWidget {
               Text(
                 numerator,
                 style: TextStyle(
-                    fontSize: 16, fontWeight: FontWeight.bold, color: textColor),
+                    fontSize: 12, fontWeight: FontWeight.bold, color: textColor),
               ),
             ],
           ),
@@ -54,18 +55,18 @@ class CoinRow extends StatelessWidget {
             count,
             textAlign: TextAlign.center,
             style: TextStyle(
-                fontSize: 16, fontWeight: FontWeight.bold, color: textColor),
+                fontSize: 12, fontWeight: FontWeight.bold, color: textColor),
           ),
           Text(
             newPrice,
             textAlign: TextAlign.center,
             style: TextStyle(
-                fontSize: 16, fontWeight: FontWeight.bold, color: textColor),
+                fontSize: 12, fontWeight: FontWeight.bold, color: textColor),
           ),
           Text(
             balance,
             style: TextStyle(
-                fontSize: 16, fontWeight: FontWeight.bold, color: textColor),
+                fontSize: 12, fontWeight: FontWeight.bold, color: textColor),
           ),
         ],
       ),

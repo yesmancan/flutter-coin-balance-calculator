@@ -184,6 +184,7 @@ class _TransactionAddPageState extends State<TransactionAddPage> {
           buttonText: "Okay",
           image: img,
           lastPrice: lastPrice,
+          unit: 0,
         );
       },
     );

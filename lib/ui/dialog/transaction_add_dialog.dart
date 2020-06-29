@@ -14,7 +14,7 @@ class Consts {
 class TransactionAddDialog extends StatelessWidget {
   final String market, coin;
   final String title, buttonText;
-  final double lastPrice;
+  final double lastPrice, unit;
   final String image;
 
   TransactionAddDialog({
@@ -23,6 +23,7 @@ class TransactionAddDialog extends StatelessWidget {
     @required this.coin,
     @required this.market,
     @required this.lastPrice,
+    @required this.unit,
     this.image,
   });
 
@@ -39,8 +40,9 @@ class TransactionAddDialog extends StatelessWidget {
   }
 
   dialogContent(BuildContext context) {
-    final unitController = TextEditingController();
-    final buyingpriceController = TextEditingController(text: lastPrice.toString());
+    final unitController = TextEditingController(text: this.unit.toString());
+    final buyingpriceController =
+        TextEditingController(text: lastPrice.toString());
 
     ItemService _itemService = ItemService();
     String buyingprice;

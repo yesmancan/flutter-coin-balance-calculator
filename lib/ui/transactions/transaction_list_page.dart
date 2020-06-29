@@ -1,3 +1,4 @@
+import 'package:coin_balance_calculator/ui/dialog/transaction_add_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -109,16 +110,23 @@ class _TransactionListPageState extends State<TransactionListPage> {
                 caption: 'Edit',
                 color: Colors.black45,
                 icon: Icons.more_horiz,
-                onTap: () => Scaffold.of(context)
-                    .showSnackBar(SnackBar(content: Text("$item dismissed"))),
+                onTap: () async {
+                  await _addTransacion(
+                      'https://raw.githubusercontent.com/yesmancan/all-crypto-coin-img-db/master/img/coins/64x64/${item.coin.numerator}.png',
+                      item.coin.numerator,
+                      item.marketId,
+                      item.coinId,
+                      item.buyingPrice,
+                      item.unit);
+                },
               ),
               IconSlideAction(
-                caption: 'Delete',
-                color: Colors.red,
-                icon: Icons.delete,
-                onTap: () => Scaffold.of(context)
-                    .showSnackBar(SnackBar(content: Text("$item dismissed"))),
-              ),
+                  caption: 'Delete',
+                  color: Colors.red,
+                  icon: Icons.delete,
+                  onTap: () async {
+                    await _deleteToTransaction(item.id, item.coin.numerator);
+                  }),
             ],
             child: ListTile(
               title: Text(item.coin.numerator),
@@ -171,6 +179,44 @@ class _TransactionListPageState extends State<TransactionListPage> {
         }
 
         return Center(child: CircularProgressIndicator());
+      },
+    );
+  }
+
+  Future<void> _deleteToTransaction(String id, String name) async {
+    bool retStatus = await _itemService.deleteToTransaction(id);
+    if (retStatus) {
+      Scaffold.of(context).showSnackBar(
+        SnackBar(
+          content: Text("$name Removed"),
+        ),
+      );
+      setState(() {
+        transactions = _itemService.fetchTransactions();
+      });
+    } else {
+      Scaffold.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Has a Error"),
+        ),
+      );
+    }
+  }
+
+  Future<Null> _addTransacion(String img, String name, String market,
+      String coin, double lastPrice, double unit) async {
+    await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return TransactionAddDialog(
+          title: name,
+          market: market,
+          unit: unit,
+          coin: coin,
+          buttonText: "Okay",
+          image: img,
+          lastPrice: lastPrice,
+        );
       },
     );
   }

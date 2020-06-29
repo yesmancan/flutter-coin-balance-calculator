@@ -97,6 +97,18 @@ class ItemService {
     }
   }
 
+  Future<bool> deleteToTransaction(String id) async {
+    Uri uri = Uri.https(_serviceUrl, "/api/transaction/delete/" + id);
+
+    final response = await http.post(uri);
+
+    if (response.statusCode != 200) {
+      throw Exception("Something went wrong");
+    } else {
+      return true;
+    }
+  }
+
   Future<void> fetchArchive(int take, int skip) async {
     Map<String, String> parameters = {
       "take": take.toString(),
